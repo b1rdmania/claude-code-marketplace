@@ -1,191 +1,228 @@
 ---
 name: readme-generator
-description: Generates comprehensive README.md files for software projects by analyzing codebase structure
-allowed-tools: ["Read", "Glob", "Grep", "Write"]
-version: 1.0.0
-author: GLINCKER Team
+description: Generates a complete, opinionated README.md by reading the actual project — code, config, SKILL.md, scripts, and structure. Works for software projects, Claude Code skills, and non-standard tool repos. Output is publication-ready on first pass, not a template with TODOs.
+allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash"]
+version: 2.0.0
+author: b1rdmania (forked from GLINCKER)
 license: Apache-2.0
-keywords: [documentation, readme, markdown, project]
+keywords: [documentation, readme, markdown, project, skills]
 ---
 
 # README Generator
 
-Automatically generates professional, comprehensive README.md files by analyzing your project structure, dependencies, and code patterns.
+Reads the project, writes the README. One pass, no placeholders.
 
 ## What This Skill Does
 
-This skill helps you create high-quality README files by:
-- Analyzing project structure and identifying key components
-- Detecting programming languages and frameworks
-- Finding configuration files (package.json, requirements.txt, etc.)
-- Identifying test frameworks and CI/CD setup
-- Generating appropriate sections with relevant content
-- Following README best practices
+- Detects project type: software package, CLI tool, Claude Code skill, script collection, or non-standard repo
+- Reads actual code and config — not just file names
+- Writes for the real audience: users installing the thing, not the person who built it
+- Produces a complete README on first pass — no TODO sections, no "add your description here"
+- Adapts tone and structure to project type rather than applying a generic template
 
 ## Instructions
 
-When generating a README, follow these steps:
+### Step 0 — Read before writing
 
-### 1. Project Discovery
+Before generating anything, understand what this project actually is and who will use it. Do not start with the README structure — start with the project.
 
-First, analyze the project structure:
-- Use Glob to find key files: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, etc.
-- Use Glob to identify main source directories
-- Use Read to examine configuration files
-- Use Grep to find test files and CI configuration
+Run these in parallel:
+```bash
+ls -la
+cat package.json 2>/dev/null || cat pyproject.toml 2>/dev/null || cat Cargo.toml 2>/dev/null || cat go.mod 2>/dev/null || echo "no standard config"
+```
 
-### 2. Content Analysis
+Then:
+- Glob for `SKILL.md`, `CLAUDE.md`, `*.mjs`, `*.py`, `*.ts`, `*.sh` — read the ones that explain what the project does
+- Read the existing README if one exists — note what's already right and what's missing
+- Check `scripts/` or `bin/` — read the entry points, not just the filenames
+- Grep for the main exported function, CLI command, or slash command name
 
-Based on findings, determine:
-- Project type (library, application, CLI tool, etc.)
-- Primary programming language(s)
-- Dependencies and frameworks
-- Build and test commands
-- License type (from LICENSE file)
+Ask: **who installs this and what do they do first?** That is the README's job.
 
-### 3. README Generation
+---
 
-Create a README.md with these sections (adapt based on project type):
+### Step 1 — Classify the project
 
-**Required Sections:**
-- **Title and Description**: Project name and one-line summary
-- **Features**: Key functionality (if applicable)
-- **Installation**: How to install/set up
-- **Usage**: Basic usage examples
-- **License**: License information
+| Type | Signals | README focus |
+|---|---|---|
+| **Claude Code skill** | `SKILL.md` present, slash command defined | Installation, command syntax, what it does vs. doesn't do |
+| **CLI tool** | `bin/` entry, `#!/usr/bin/env` shebang | Install command, usage with flags, example output |
+| **npm package** | `package.json` with `main`/`exports` | Install, API surface, quick example |
+| **Python package** | `pyproject.toml` or `setup.py` | pip install, usage, environment setup |
+| **Script collection** | Multiple `.mjs`/`.py`/`.sh`, no package | What each script does, how to run, dependencies |
+| **Non-standard repo** | None of the above | Describe what's in it, how to navigate it |
 
-**Optional Sections** (include if relevant):
-- **Prerequisites**: Required software/tools
-- **Development**: How to set up for development
-- **Testing**: How to run tests
-- **Contributing**: Contribution guidelines
-- **API Documentation**: For libraries
-- **Screenshots**: For applications with UI
-- **Roadmap**: Future plans
-- **Acknowledgments**: Credits and thanks
+If `SKILL.md` is present: read it fully. The README should accurately reflect the skill's commands, tools, and scope — it is the public face of the skill.
 
-### 4. Writing Style
+---
 
-Use this style for generated READMEs:
-- Clear, concise language
-- Active voice
-- Code blocks with proper syntax highlighting
-- Badge shields for status indicators (if CI/CD detected)
-- Emoji sparingly (only if user requests)
-- Professional but approachable tone
+### Step 2 — Write the README
 
-### 5. Output
+Structure adapts by project type. Use only the sections that apply.
 
-Present the generated README to the user and offer to:
-- Write it to README.md
-- Make adjustments based on feedback
-- Add additional sections
+---
 
-## Examples
+**`# [Project Name]`**
 
-### Example 1: Python Project
+One sentence. What it does and who it's for. Not "a tool that helps you" — just what it does.
 
-**User Request:**
-"Generate a README for this Python project"
+Good: `Generates pre-call intelligence briefs on founder-operated businesses using Perplexity deep research and Companies House data.`
+Bad: `A powerful CLI tool that helps developers streamline their workflow.`
 
-**Workflow:**
-1. Glob for Python files: `**/*.py`
-2. Read `pyproject.toml` or `setup.py`
-3. Check for `requirements.txt`, `Pipfile`
-4. Look for test files in `tests/` or `*_test.py`
-5. Generate README with:
-   - Installation via pip
-   - Python version requirements
-   - Virtual environment setup
-   - Testing with pytest/unittest
+---
 
-### Example 2: Node.js Project
+**`## Install`** (if installable)
 
-**User Request:**
-"Create a README for my npm package"
+Exact commands. No explanation unless something is non-obvious.
 
-**Workflow:**
-1. Read `package.json` for name, description, scripts
-2. Identify framework (React, Vue, Express, etc.)
-3. Check for TypeScript (`tsconfig.json`)
-4. Look for test configuration (Jest, Mocha)
-5. Generate README with:
-   - npm/yarn installation
-   - Available scripts
-   - API documentation (for packages)
-   - Usage examples
+For a Claude Code skill:
+```bash
+cp -r skills/readme-generator ~/.claude/skills/
+# or symlink for development
+ln -s $(pwd)/skills/readme-generator ~/.claude/skills/readme-generator
+```
 
-## Configuration
+For npm:
+```bash
+npm install @scope/package
+```
 
-This skill adapts to project type:
+For pip:
+```bash
+pip install package-name
+```
 
-| Project Type | Key Files | Focus Areas |
-|--------------|-----------|-------------|
-| Python | `pyproject.toml`, `setup.py` | pip install, virtual env |
-| Node.js | `package.json` | npm install, scripts |
-| Rust | `Cargo.toml` | cargo build, features |
-| Go | `go.mod` | go get, modules |
-| Generic | None | Basic structure |
+---
 
-## Tool Requirements
+**`## Usage`**
 
-- **Read**: Examine configuration and source files
-- **Glob**: Find relevant files across project
-- **Grep**: Search for patterns (tests, CI, etc.)
-- **Write**: Create the README.md file
+Show the real thing, not a toy example. If it's a slash command, show the actual command and what the output looks like. If it's a script, show the real invocation with realistic arguments.
+
+For Claude Code skills, show:
+- The slash command and any flags
+- A concrete example with realistic input
+- What the output looks like
+
+---
+
+**`## What it does`**
+
+For non-obvious projects: a short list of what happens when you run it. Bullet points, active verbs, specific not vague.
+
+Skip this section for simple tools where usage makes it obvious.
+
+---
+
+**`## What it doesn't do`**
+
+One of the most useful sections. Prevents the wrong people from installing it and sets accurate expectations for the right ones. Include whenever there are likely misconceptions.
+
+Examples:
+- Does not send emails or make external API calls on your behalf
+- Does not analyse code logic — only file structure and config
+- Requires Perplexity MCP to be configured — will not work without it
+
+---
+
+**`## Requirements`**
+
+Only list things that aren't obvious or aren't automatically installed. If it's just Node 18+, skip it. If it needs a specific MCP server or API key configured, say so explicitly — name the variable, show the format.
+
+---
+
+**`## Configuration`** (if applicable)
+
+Environment variables, settings files, or one-time setup steps. Be specific — name the exact variable, show the format.
+
+```bash
+PERPLEXITY_API_KEY=pplx-...
+NOTION_TOKEN=secret_...
+```
+
+---
+
+**`## Project structure`** (for non-standard repos)
+
+A short annotated tree showing what's where and why. Not exhaustive — just enough to navigate.
+
+```
+scripts/          # zero-dependency .mjs scripts, run directly with node
+schemas/          # JSON schemas for intake and audit data
+clients/          # per-client folders (gitignored)
+skills/           # Claude Code skills for the pipeline
+```
+
+---
+
+**`## Contributing`** (optional)
+
+Only include if contributions are genuinely welcome and you have a process. Skip the boilerplate "open an issue or PR" if you don't actually mean it.
+
+---
+
+**`## License`**
+
+One line.
+
+---
+
+### Step 3 — Voice rules
+
+Apply throughout. Non-negotiable.
+
+- **Orwell rules**: no word that can be cut, no passive where active works
+- **No jargon without a referent**: "MCP server" is fine, "leveraging synergistic tooling" is not
+- **No emojis** unless the user explicitly asks
+- **Banned words**: "simply", "easily", "just", "powerful", "robust", "seamless", "streamline", "leverage", "comprehensive" (as a filler adjective)
+- **No marketing tone**: write for the person installing it, not for a product page
+- **Present tense, declarative sentences**
+- **Code blocks for all commands** — never inline a command without a code block
+
+---
+
+### Step 4 — Output
+
+1. Show the generated README in the conversation
+2. Ask: "Write to README.md?" — if one already exists, confirm before overwriting
+3. If the user approves, write it
+4. Offer one round of targeted edits if something doesn't look right
+
+Do not add TODO placeholders. If a section genuinely can't be filled from the project files, skip it or ask the user one specific question to fill the gap.
+
+---
+
+## Error handling
+
+**No config files found**: Read source files directly — don't give up. Glob for `.md`, `.mjs`, `.py`, `.sh` and read the most likely entry point.
+
+**Existing README**: Read it first. Preserve anything that looks intentional. Don't overwrite without confirming.
+
+**SKILL.md present but incomplete**: Generate from what's there, flag the gap to the user rather than inventing content.
+
+**Can't determine project type**: Ask one question — "What does someone do first after cloning this?" — then proceed.
+
+---
 
 ## Limitations
 
-- Cannot include screenshots (user must add manually)
-- May miss custom build processes not in standard files
-- Generates starting point - user should review and customize
-- Works best with standard project structures
-- Does not analyze actual code logic for features
+- Cannot generate screenshots or demo GIFs
+- Does not run the project to verify commands work — review before publishing
+- For large codebases, reads entry points and config only, not every file
 
-## Best Practices
-
-When using this skill:
-
-1. **Run from project root**: Ensure you're in the main project directory
-2. **Review before writing**: Check generated content before writing to file
-3. **Customize**: Treat output as a template, add project-specific details
-4. **Update regularly**: Regenerate when project structure changes significantly
-5. **Backup existing**: If README.md exists, back it up first
-
-## Error Handling
-
-- **No project files found**: Ask user to confirm working directory
-- **Multiple languages detected**: Generate sections for each, note polyglot nature
-- **Existing README**: Prompt user before overwriting, offer to merge
-- **Missing key info**: Generate placeholder sections with TODO markers
-
-## Related Skills
-
-- [changelog-generator](../../automation/changelog-generator/SKILL.md) - Create CHANGELOG.md
-- [api-doc-generator](../api-doc-generator/SKILL.md) - Generate API documentation
-- [license-picker](../../automation/license-picker/SKILL.md) - Add license files
+---
 
 ## Changelog
 
-### Version 1.0.0 (2025-01-13)
+### 2.0.0
+- Forked from GLINCKER/claude-code-marketplace
+- Added Claude Code skill detection and SKILL.md cross-referencing
+- Added script collection and non-standard repo project types
+- Rewrote voice rules — Orwell, no marketing filler, banned words list
+- Output is complete on first pass — no TODO placeholders
+- Added "What it doesn't do" section pattern
+- Removed generic boilerplate sections
+
+### 1.0.0 (GLINCKER original)
 - Initial release
-- Support for Python, Node.js, Rust, Go projects
-- Automatic dependency detection
-- Standard section generation
-
-## Contributing
-
-Found a bug or want to add support for a new project type? Please:
-1. Open an issue with details
-2. Submit a PR with improvements
-3. Follow [Contributing Guidelines](../../../docs/CONTRIBUTING.md)
-
-## License
-
-Apache License 2.0 - See [LICENSE](../../../LICENSE)
-
-## Author
-
-**GLINCKER Team**
-- GitHub: [@GLINCKER](https://github.com/GLINCKER)
-- Repository: [claude-code-marketplace](https://github.com/GLINCKER/claude-code-marketplace)
+- Python, Node.js, Rust, Go support
